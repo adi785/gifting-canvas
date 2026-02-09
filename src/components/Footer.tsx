@@ -9,7 +9,7 @@ export default function Footer() {
           <div>
             <Link to="/" className="flex items-center gap-2">
               <Gift className="h-5 w-5 text-primary" />
-              <span className="font-serif text-lg font-bold">GiftCraft</span>
+              <span className="font-serif text-lg font-bold">JU Makerspace</span>
             </Link>
             <p className="mt-3 text-sm text-muted-foreground">
               Handcrafted 3D-printed gifts that turn emotions into keepsakes.
@@ -38,7 +38,7 @@ export default function Footer() {
           </div>
         </div>
         <div className="mt-10 border-t pt-6 text-center text-xs text-muted-foreground">
-          © 2026 GiftCraft. All rights reserved.
+          © 2026 JU Makerspace. All rights reserved.
         </div>
       </div>
     </footer>

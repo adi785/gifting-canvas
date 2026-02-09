@@ -70,7 +70,7 @@ export default function Auth() {
           </div>
           <CardTitle className="font-serif text-2xl">{isLogin ? "Welcome Back" : "Create Account"}</CardTitle>
           <CardDescription>
-            {isLogin ? "Sign in to your GiftCraft account" : "Join GiftCraft and start gifting"}
+            {isLogin ? "Sign in to your Fabino account" : "Join Fabino and start gifting"}
           </CardDescription>
         </CardHeader>
         <CardContent>

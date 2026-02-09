@@ -36,6 +36,24 @@ npm i
 npm run dev
 ```
 
+## Environment Variables
+
+To run this project, you need to set up the following environment variables.
+Create a `.env` file in the root directory (or set these in your deployment dashboard):
+
+```
+VITE_SUPABASE_PROJECT_ID="your-project-id"
+VITE_SUPABASE_PUBLISHABLE_KEY="your-publishable-key"
+VITE_SUPABASE_URL="your-supabase-url"
+```
+
+## Scripts
+
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run preview` - Preview production build
+- `npm run lint` - Lint code
+
 **Edit a file directly in GitHub**
 
 - Navigate to the desired file(s).

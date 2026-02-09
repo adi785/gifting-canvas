@@ -21,7 +21,7 @@ export default function Navbar() {
       <div className="container flex h-16 items-center justify-between">
         <Link to="/" className="flex items-center gap-2">
           <Gift className="h-6 w-6 text-primary" />
-          <span className="font-serif text-xl font-bold tracking-tight text-foreground">GiftCraft</span>
+          <span className="font-serif text-xl font-bold tracking-tight text-foreground">Fabino</span>
         </Link>
 
         <nav className="hidden items-center gap-8 md:flex">

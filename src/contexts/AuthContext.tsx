@@ -2,11 +2,18 @@ import { createContext, useContext, useEffect, useState, ReactNode } from "react
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
+type UserRole = "user" | "admin" | "owner";
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
+  role: UserRole;
   loading: boolean;
-  signUp: (email: string, password: string, fullName: string) => Promise<{ error: Error | null }>;
+  signUp: (
+    email: string,
+    password: string,
+    fullName: string
+  ) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
 }
@@ -16,20 +23,47 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
+  const [role, setRole] = useState<UserRole>("user");
   const [loading, setLoading] = useState(true);
 
+  // 🔑 Fetch role from DB
+  const fetchUserRole = async (userId: string) => {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", userId)
+      .single();
+
+    if (!error && data?.role) {
+      setRole(data.role as UserRole);
+    } else {
+      setRole("user");
+    }
+  };
+
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+    const { data: { subscription } } =
+      supabase.auth.onAuthStateChange((_, session) => {
         setSession(session);
         setUser(session?.user ?? null);
+
+        if (session?.user) {
+          fetchUserRole(session.user.id);
+        } else {
+          setRole("user");
+        }
+
         setLoading(false);
-      }
-    );
+      });
 
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
+
+      if (session?.user) {
+        fetchUserRole(session.user.id);
+      }
+
       setLoading(false);
     });
 
@@ -38,7 +72,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signUp = async (email: string, password: string, fullName: string) => {
     const redirectUrl = `${window.location.origin}/`;
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -46,6 +80,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         data: { full_name: fullName },
       },
     });
+
+    // 👇 Create profile with default role = user
+    if (!error && data.user) {
+      await supabase.from("profiles").insert({
+        id: data.user.id,
+        full_name: fullName,
+        role: "user",
+      });
+    }
+
     return { error: error as Error | null };
   };
 
@@ -56,10 +100,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     await supabase.auth.signOut();
+    setRole("user");
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, signUp, signIn, signOut }}>
+    <AuthContext.Provider
+      value={{ user, session, role, loading, signUp, signIn, signOut }}
+    >
       {children}
     </AuthContext.Provider>
   );

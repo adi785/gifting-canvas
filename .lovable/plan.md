@@ -1,6 +1,6 @@
 
 
-# 🎁 GiftCraft — Personalized 3D-Printed Gifting Platform
+# 🎁 Fabino — Personalized 3D-Printed Gifting Platform
 
 ## Overview
 A premium, emotion-driven e-commerce platform where users can browse, personalize, and order custom 3D-printed gifts for birthdays, anniversaries, surprises, and more. Multi-user with full authentication.

@@ -8,6 +8,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Package, User } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { Link } from "react-router-dom";
+
 
 export default function Profile() {
   const { user, loading, signOut } = useAuth();
@@ -20,6 +23,22 @@ export default function Profile() {
     },
     enabled: !!user,
   });
+
+  const { role } = useAuth();
+
+  {
+    (role === "admin" || role === "owner") && (
+      <div style={{ marginTop: "24px", padding: "16px", border: "1px solid #eee", borderRadius: "12px" }}>
+        <h3>Admin Panel</h3>
+
+        <Link to="/admin/upload">
+          <button style={{ marginTop: "12px" }}>
+            Upload New Product
+          </button>
+        </Link>
+      </div>
+    )
+  }
 
   const { data: orders } = useQuery({
     queryKey: ["orders", user?.id],
