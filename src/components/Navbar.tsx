@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ShoppingBag, User, Menu, Gift, LogOut } from "lucide-react";
+import { ShoppingBag, User, Menu, Gift, LogOut, Shield, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 import { useAuth } from "@/contexts/AuthContext";
@@ -7,7 +7,7 @@ import { useCart } from "@/contexts/CartContext";
 import { useState } from "react";
 
 export default function Navbar() {
-  const { user, signOut } = useAuth();
+  const { user, role, signOut } = useAuth();
   const { itemCount } = useCart();
   const [open, setOpen] = useState(false);
 
@@ -46,6 +46,16 @@ export default function Navbar() {
 
           {user ? (
             <>
+              {role === "owner" && (
+                <Link to="/owner">
+                  <Button variant="ghost" size="icon" title="Manage Admins"><Crown className="h-5 w-5" /></Button>
+                </Link>
+              )}
+              {(role === "admin" || role === "owner") && (
+                <Link to="/admin/upload">
+                  <Button variant="ghost" size="icon" title="Add Product"><Shield className="h-5 w-5" /></Button>
+                </Link>
+              )}
               <Link to="/profile">
                 <Button variant="ghost" size="icon"><User className="h-5 w-5" /></Button>
               </Link>
@@ -73,6 +83,12 @@ export default function Navbar() {
                 ))}
                 {user ? (
                   <>
+                    {role === "owner" && (
+                      <Link to="/owner" onClick={() => setOpen(false)} className="text-lg font-medium text-foreground">Manage Admins</Link>
+                    )}
+                    {(role === "admin" || role === "owner") && (
+                      <Link to="/admin/upload" onClick={() => setOpen(false)} className="text-lg font-medium text-foreground">Add Product</Link>
+                    )}
                     <Link to="/profile" onClick={() => setOpen(false)} className="text-lg font-medium text-foreground">Profile</Link>
                     <button onClick={() => { signOut(); setOpen(false); }} className="text-left text-lg font-medium text-muted-foreground">Sign Out</button>
                   </>
