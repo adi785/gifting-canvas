@@ -55,25 +55,21 @@ export default function AdminUpload() {
   const [files, setFiles] = useState<FileList | null>(null);
   const [uploading, setUploading] = useState(false);
 
+  /* ---------- Guards ---------- */
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
       </div>
     );
   }
 
-  if (role !== "admin" && role !== "owner") {
+  if (!user || (role !== "admin" && role !== "owner")) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen">
         <Navbar />
         <div className="container mx-auto px-4 py-20 text-center">
-          <h1 className="text-2xl font-heading font-bold text-foreground">
-            Access Denied
-          </h1>
-          <p className="text-muted-foreground mt-2">
-            You need admin privileges to access this page.
-          </p>
+          <h1 className="text-2xl font-bold">Admin access required</h1>
         </div>
         <Footer />
       </div>
@@ -88,13 +84,14 @@ export default function AdminUpload() {
     );
   };
 
+  /* ---------- Submit ---------- */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!user || !name || !price) {
+    if (!name || !price) {
       toast({
         title: "Missing fields",
-        description: "Name and price are required.",
+        description: "Product name and price are required.",
         variant: "destructive",
       });
       return;
@@ -103,26 +100,19 @@ export default function AdminUpload() {
     setUploading(true);
 
     try {
+      /* Upload images */
       const imageUrls: string[] = [];
 
-      if (files) {
+      if (files && files.length > 0) {
         for (let i = 0; i < files.length; i++) {
           const file = files[i];
           const filePath = `${user.id}/${Date.now()}-${file.name}`;
 
-          const { error: uploadError } = await supabase.storage
+          const { error } = await supabase.storage
             .from("images")
             .upload(filePath, file);
 
-          if (uploadError) {
-            toast({
-              title: "Upload failed",
-              description: uploadError.message,
-              variant: "destructive",
-            });
-            setUploading(false);
-            return;
-          }
+          if (error) throw error;
 
           const { data } = supabase.storage
             .from("images")
@@ -132,15 +122,15 @@ export default function AdminUpload() {
         }
       }
 
+      /* 🔥 RLS-SAFE INSERT */
       const { error: dbError } = await supabase.from("products").insert({
         name,
         description,
         short_description: shortDescription,
         story,
-        price: parseFloat(price),
-        created_by: user.id,
+        price: Number(price),
         category,
-        occasion: occasions,
+        occasions,            // ✅ MATCHES DB COLUMN
         images: imageUrls,
         materials: materials
           ? materials.split(",").map((m) => m.trim())
@@ -149,36 +139,33 @@ export default function AdminUpload() {
         sizes: sizes ? sizes.split(",").map((s) => s.trim()) : [],
         estimated_delivery: estimatedDelivery,
         is_featured: isFeatured,
+        created_by: user.id,  // ✅ REQUIRED BY RLS
       });
 
-      if (dbError) {
-        toast({
-          title: "Save failed",
-          description: dbError.message,
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Product added!",
-          description: `${name} has been added to the catalog.`,
-        });
+      if (dbError) throw dbError;
 
-        setName("");
-        setDescription("");
-        setShortDescription("");
-        setStory("");
-        setPrice("");
-        setCategory("custom");
-        setOccasions([]);
-        setMaterials("");
-        setColors("");
-        setSizes("");
-        setFiles(null);
-        setIsFeatured(false);
-      }
+      toast({
+        title: "Product added successfully",
+        description: `${name} has been added.`,
+      });
+
+      /* Reset */
+      setName("");
+      setDescription("");
+      setShortDescription("");
+      setStory("");
+      setPrice("");
+      setCategory("custom");
+      setOccasions([]);
+      setMaterials("");
+      setColors("");
+      setSizes("");
+      setFiles(null);
+      setIsFeatured(false);
+
     } catch (err: any) {
       toast({
-        title: "Error",
+        title: "Upload failed",
         description: err.message,
         variant: "destructive",
       });
@@ -187,74 +174,52 @@ export default function AdminUpload() {
     }
   };
 
+  /* ---------- UI ---------- */
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
 
       <div className="container mx-auto px-4 py-12 max-w-2xl">
-        <h1 className="text-3xl font-heading font-bold text-foreground mb-8">
-          Add New Product
-        </h1>
+        <h1 className="text-3xl font-bold mb-8">Add New Product</h1>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-2">
-            <Label htmlFor="name">Product Name *</Label>
-            <Input
-              id="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Personalized Name Lamp"
-              required
-            />
+          <div>
+            <Label>Product Name *</Label>
+            <Input value={name} onChange={(e) => setName(e.target.value)} />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="shortDesc">Short Description</Label>
+          <div>
+            <Label>Short Description</Label>
             <Input
-              id="shortDesc"
               value={shortDescription}
               onChange={(e) => setShortDescription(e.target.value)}
-              placeholder="Brief tagline"
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="description">Full Description</Label>
+          <div>
+            <Label>Full Description</Label>
             <Textarea
-              id="description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Detailed product description"
-              rows={4}
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="story">Story / Why This Gift Works</Label>
-            <Textarea
-              id="story"
-              value={story}
-              onChange={(e) => setStory(e.target.value)}
-              placeholder="Emotional story behind this gift"
-              rows={3}
-            />
+          <div>
+            <Label>Story</Label>
+            <Textarea value={story} onChange={(e) => setStory(e.target.value)} />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="price">Price (₹) *</Label>
+            <div>
+              <Label>Price *</Label>
               <Input
-                id="price"
                 type="number"
-                step="0.01"
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
-                placeholder="999"
-                required
               />
             </div>
 
-            <div className="space-y-2">
+            <div>
               <Label>Category</Label>
               <Select value={category} onValueChange={setCategory}>
                 <SelectTrigger>
@@ -263,7 +228,7 @@ export default function AdminUpload() {
                 <SelectContent>
                   {CATEGORIES.map((c) => (
                     <SelectItem key={c} value={c}>
-                      {c.charAt(0).toUpperCase() + c.slice(1)}
+                      {c}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -271,7 +236,7 @@ export default function AdminUpload() {
             </div>
           </div>
 
-          <div className="space-y-2">
+          <div>
             <Label>Occasions</Label>
             <div className="flex flex-wrap gap-2">
               {OCCASIONS.map((occ) => (
@@ -279,10 +244,10 @@ export default function AdminUpload() {
                   type="button"
                   key={occ}
                   onClick={() => toggleOccasion(occ)}
-                  className={`px-3 py-1 rounded-full text-sm border transition-colors ${
+                  className={`px-3 py-1 border rounded ${
                     occasions.includes(occ)
-                      ? "bg-primary text-primary-foreground border-primary"
-                      : "bg-background text-foreground border-border hover:border-primary"
+                      ? "bg-primary text-white"
+                      : ""
                   }`}
                 >
                   {occ}
@@ -291,101 +256,21 @@ export default function AdminUpload() {
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="materials">Materials</Label>
-              <Input
-                id="materials"
-                value={materials}
-                onChange={(e) => setMaterials(e.target.value)}
-                placeholder="PLA, Resin"
-              />
-              <p className="text-xs text-muted-foreground">
-                Comma-separated
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="colors">Colors</Label>
-              <Input
-                id="colors"
-                value={colors}
-                onChange={(e) => setColors(e.target.value)}
-                placeholder="White, Black"
-              />
-              <p className="text-xs text-muted-foreground">
-                Comma-separated
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="sizes">Sizes</Label>
-              <Input
-                id="sizes"
-                value={sizes}
-                onChange={(e) => setSizes(e.target.value)}
-                placeholder="S, M, L"
-              />
-              <p className="text-xs text-muted-foreground">
-                Comma-separated
-              </p>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="delivery">Estimated Delivery</Label>
-            <Input
-              id="delivery"
-              value={estimatedDelivery}
-              onChange={(e) => setEstimatedDelivery(e.target.value)}
-            />
-          </div>
-
-          <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              id="featured"
-              checked={isFeatured}
-              onChange={(e) => setIsFeatured(e.target.checked)}
-              className="rounded"
-            />
-            <Label htmlFor="featured">Featured Product</Label>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="images">Product Images</Label>
-            <div className="border-2 border-dashed border-border rounded-xl p-6 text-center hover:border-primary transition-colors">
-              <Upload className="mx-auto h-8 w-8 text-muted-foreground mb-2" />
+          <div>
+            <Label>Images</Label>
+            <div className="border-2 border-dashed p-6 text-center">
+              <Upload className="mx-auto mb-2" />
               <input
-                id="images"
                 type="file"
-                accept="image/*"
                 multiple
+                accept="image/*"
                 onChange={(e) => setFiles(e.target.files)}
-                className="w-full text-sm text-muted-foreground"
               />
-              {files && (
-                <p className="text-sm text-muted-foreground mt-2">
-                  {files.length} file(s) selected
-                </p>
-              )}
             </div>
           </div>
 
-          <Button
-            type="submit"
-            className="w-full"
-            size="lg"
-            disabled={uploading}
-          >
-            {uploading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Uploading...
-              </>
-            ) : (
-              "Save Product"
-            )}
+          <Button type="submit" disabled={uploading} className="w-full">
+            {uploading ? "Uploading..." : "Save Product"}
           </Button>
         </form>
       </div>
@@ -394,3 +279,4 @@ export default function AdminUpload() {
     </div>
   );
 }
+
