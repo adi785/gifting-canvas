@@ -38,6 +38,9 @@ const OCCASIONS = [
 
 export default function AdminUpload() {
   const { role, user, loading } = useAuth();
+  console.log("AUTH USER:", user);
+  console.log("AUTH ROLE:", role);
+
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
