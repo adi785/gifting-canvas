@@ -14,7 +14,7 @@ import Checkout from "./pages/Checkout";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 import AdminUpload from "./pages/AdminUpload";
-
+import OwnerPanel from "./pages/OwnerPanel";
 
 const queryClient = new QueryClient();
 
@@ -35,6 +35,7 @@ const App = () => (
               <Route path="/checkout" element={<Checkout />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/admin/upload" element={<AdminUpload />} />
+              <Route path="/owner" element={<OwnerPanel />} />
             </Routes>
           </CartProvider>
         </AuthProvider>

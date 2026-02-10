@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useState, ReactNode } from "react
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
-type UserRole = "user" | "admin" | "owner";
+type UserRole = "user" | "admin" | "owner" | "moderator";
 
 interface AuthContextType {
   user: User | null;
@@ -26,16 +26,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [role, setRole] = useState<UserRole>("user");
   const [loading, setLoading] = useState(true);
 
-  // 🔑 Fetch role from DB
+  // 🔑 Fetch role from user_roles table
   const fetchUserRole = async (userId: string) => {
     const { data, error } = await supabase
-      .from("profiles")
+      .from("user_roles")
       .select("role")
-      .eq("id", userId)
-      .single();
+      .eq("user_id", userId);
 
-    if (!error && data?.role) {
-      setRole(data.role as UserRole);
+    if (!error && data && data.length > 0) {
+      // Priority: owner > admin > moderator > user
+      const roles = data.map((r) => r.role);
+      if (roles.includes("owner")) setRole("owner");
+      else if (roles.includes("admin")) setRole("admin");
+      else if (roles.includes("moderator")) setRole("moderator");
+      else setRole("user");
     } else {
       setRole("user");
     }
@@ -81,14 +85,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       },
     });
 
-    // 👇 Create profile with default role = user
-    if (!error && data.user) {
-      await supabase.from("profiles").insert({
-        id: data.user.id,
-        full_name: fullName,
-        role: "user",
-      });
-    }
+    // Profile is auto-created via trigger, no need to insert here
 
     return { error: error as Error | null };
   };
