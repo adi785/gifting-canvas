@@ -52,8 +52,8 @@ export default function Navbar() {
                 </Link>
               )}
               {(role === "admin" || role === "owner") && (
-                <Link to="/admin/upload">
-                  <Button variant="ghost" size="icon" title="Add Product"><Shield className="h-5 w-5" /></Button>
+                <Link to="/admin/products">
+                  <Button variant="ghost" size="icon" title="Manage Products"><Shield className="h-5 w-5" /></Button>
                 </Link>
               )}
               <Link to="/profile">
@@ -87,7 +87,7 @@ export default function Navbar() {
                       <Link to="/owner" onClick={() => setOpen(false)} className="text-lg font-medium text-foreground">Manage Admins</Link>
                     )}
                     {(role === "admin" || role === "owner") && (
-                      <Link to="/admin/upload" onClick={() => setOpen(false)} className="text-lg font-medium text-foreground">Add Product</Link>
+                      <Link to="/admin/products" onClick={() => setOpen(false)} className="text-lg font-medium text-foreground">Manage Products</Link>
                     )}
                     <Link to="/profile" onClick={() => setOpen(false)} className="text-lg font-medium text-foreground">Profile</Link>
                     <button onClick={() => { signOut(); setOpen(false); }} className="text-left text-lg font-medium text-muted-foreground">Sign Out</button>
