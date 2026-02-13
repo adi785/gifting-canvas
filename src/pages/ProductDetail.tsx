@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { ShoppingBag, Truck, Shield, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useScrollRevealAll } from "@/hooks/useScrollReveal";
 
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
@@ -37,6 +38,8 @@ export default function ProductDetail() {
 
   if (isLoading) return <div className="min-h-screen bg-background"><Navbar /><div className="container py-20 text-center text-muted-foreground">Loading...</div></div>;
   if (!product) return <div className="min-h-screen bg-background"><Navbar /><div className="container py-20 text-center text-muted-foreground">Product not found</div></div>;
+
+  useScrollRevealAll();
 
   const images = product.images?.length ? product.images : ["/placeholder.svg"];
   const imageUrl = images[0];
@@ -64,7 +67,7 @@ export default function ProductDetail() {
       <div className="container px-4 py-10">
         <div className="grid gap-10 lg:grid-cols-2">
           {/* Left: Customization */}
-          <div className="order-2 lg:order-1">
+          <div className="order-2 lg:order-1 scroll-reveal slide-left">
             <Badge variant="secondary" className="capitalize">{product.category}</Badge>
             <h1 className="mt-3 font-serif text-3xl font-bold text-foreground md:text-4xl">{product.name}</h1>
             <p className="mt-2 text-2xl font-bold text-primary">${Number(product.price).toFixed(2)}</p>
@@ -129,7 +132,7 @@ export default function ProductDetail() {
           </div>
 
           {/* Right: Image + Preview */}
-          <div className="order-1 lg:order-2 space-y-4">
+          <div className="order-1 lg:order-2 space-y-4 scroll-reveal slide-right">
             {/* Main Image */}
             <div className="relative overflow-hidden rounded-2xl bg-secondary/30">
               <div
