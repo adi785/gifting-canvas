@@ -100,6 +100,15 @@ export default function AdminUpload() {
       return;
     }
 
+    if (!files || files.length < 2 || files.length > 4) {
+      toast({
+        title: "Images required",
+        description: "Please select 2 to 4 images.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setUploading(true);
 
     try {
@@ -260,16 +269,44 @@ export default function AdminUpload() {
           </div>
 
           <div>
-            <Label>Images</Label>
-            <div className="border-2 border-dashed p-6 text-center">
-              <Upload className="mx-auto mb-2" />
+            <Label>Images (2–4 required) *</Label>
+            <div className="border-2 border-dashed border-border rounded-xl p-6 text-center">
+              <Upload className="mx-auto mb-2 text-muted-foreground" />
+              <p className="text-sm text-muted-foreground mb-2">Select 2 to 4 images</p>
               <input
                 type="file"
                 multiple
                 accept="image/*"
-                onChange={(e) => setFiles(e.target.files)}
+                onChange={(e) => {
+                  const selected = e.target.files;
+                  if (selected && selected.length > 4) {
+                    toast({ title: "Too many images", description: "Please select up to 4 images.", variant: "destructive" });
+                    e.target.value = "";
+                    setFiles(null);
+                    return;
+                  }
+                  setFiles(selected);
+                }}
+                className="w-full text-sm text-muted-foreground"
               />
             </div>
+            {files && files.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-3">
+                {Array.from(files).map((file, i) => (
+                  <div key={i} className="relative">
+                    <img
+                      src={URL.createObjectURL(file)}
+                      alt={`Preview ${i + 1}`}
+                      className="h-20 w-20 rounded-lg object-cover border border-border"
+                    />
+                    <span className="absolute bottom-0 right-0 bg-background/80 text-xs px-1 rounded-tl">{i + 1}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+            {files && (files.length < 2) && (
+              <p className="text-sm text-destructive mt-1">Please select at least 2 images.</p>
+            )}
           </div>
 
           <Button type="submit" disabled={uploading} className="w-full">
