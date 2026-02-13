@@ -142,7 +142,7 @@ export default function AdminUpload() {
         story,
         price: Number(price),
         category,
-        occasions,            // ✅ MATCHES DB COLUMN
+        occasion: occasions,
         images: imageUrls,
         materials: materials
           ? materials.split(",").map((m) => m.trim())
@@ -151,7 +151,6 @@ export default function AdminUpload() {
         sizes: sizes ? sizes.split(",").map((s) => s.trim()) : [],
         estimated_delivery: estimatedDelivery,
         is_featured: isFeatured,
-        created_by: user.id,  // ✅ REQUIRED BY RLS
       });
 
       if (dbError) throw dbError;
