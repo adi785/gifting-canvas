@@ -11,7 +11,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { ShoppingBag, Truck, Shield } from "lucide-react";
+import { ShoppingBag, Truck, Shield, ChevronLeft, ChevronRight } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
@@ -23,6 +24,7 @@ export default function ProductDetail() {
   const [selectedColor, setSelectedColor] = useState("");
   const [selectedMaterial, setSelectedMaterial] = useState("");
   const [selectedSize, setSelectedSize] = useState("");
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   const { data: product, isLoading } = useQuery({
     queryKey: ["product", id],
@@ -36,7 +38,8 @@ export default function ProductDetail() {
   if (isLoading) return <div className="min-h-screen bg-background"><Navbar /><div className="container py-20 text-center text-muted-foreground">Loading...</div></div>;
   if (!product) return <div className="min-h-screen bg-background"><Navbar /><div className="container py-20 text-center text-muted-foreground">Product not found</div></div>;
 
-  const imageUrl = product.images?.[0] || "/placeholder.svg";
+  const images = product.images?.length ? product.images : ["/placeholder.svg"];
+  const imageUrl = images[0];
 
   const handleAddToCart = () => {
     if (!user) {
@@ -126,12 +129,78 @@ export default function ProductDetail() {
           </div>
 
           {/* Right: Image + Preview */}
-          <div className="order-1 lg:order-2">
-            <div className="overflow-hidden rounded-2xl bg-secondary/30">
-              <img src={imageUrl} alt={product.name} className="aspect-square w-full object-cover" />
+          <div className="order-1 lg:order-2 space-y-4">
+            {/* Main Image */}
+            <div className="relative overflow-hidden rounded-2xl bg-secondary/30">
+              <div
+                className="flex transition-transform duration-500 ease-in-out"
+                style={{ transform: `translateX(-${currentImageIndex * 100}%)` }}
+              >
+                {images.map((img, i) => (
+                  <img
+                    key={i}
+                    src={img}
+                    alt={`${product.name} - Image ${i + 1}`}
+                    className="aspect-square w-full shrink-0 object-cover"
+                  />
+                ))}
+              </div>
+
+              {images.length > 1 && (
+                <>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-background/70 backdrop-blur-sm hover:bg-background/90"
+                    onClick={() => setCurrentImageIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1))}
+                  >
+                    <ChevronLeft className="h-5 w-5" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-background/70 backdrop-blur-sm hover:bg-background/90"
+                    onClick={() => setCurrentImageIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1))}
+                  >
+                    <ChevronRight className="h-5 w-5" />
+                  </Button>
+                  {/* Dots */}
+                  <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-2">
+                    {images.map((_, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setCurrentImageIndex(i)}
+                        className={cn(
+                          "h-2 w-2 rounded-full transition-all duration-300",
+                          i === currentImageIndex ? "w-6 bg-primary" : "bg-background/70"
+                        )}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
+
+            {/* Thumbnails */}
+            {images.length > 1 && (
+              <div className="flex gap-2 overflow-x-auto pb-1">
+                {images.map((img, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setCurrentImageIndex(i)}
+                    className={cn(
+                      "h-16 w-16 shrink-0 overflow-hidden rounded-lg border-2 transition-all duration-300",
+                      i === currentImageIndex ? "border-primary ring-2 ring-primary/30" : "border-transparent opacity-60 hover:opacity-100"
+                    )}
+                  >
+                    <img src={img} alt="" className="h-full w-full object-cover" />
+                  </button>
+                ))}
+              </div>
+            )}
+
             {customText && (
-              <div className="mt-4 rounded-2xl border bg-card p-6 text-center">
+              <div className="rounded-2xl border bg-card p-6 text-center">
                 <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Live Preview</p>
                 <p className="mt-3 font-serif text-2xl text-foreground">{customText}</p>
                 {selectedColor && <p className="mt-1 text-sm text-muted-foreground">Color: {selectedColor}</p>}
